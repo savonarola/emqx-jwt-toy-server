@@ -37,7 +37,8 @@ defmodule JwtServer do
   @kid "testkey@emqx.io"
   @jwk_rs_files %{
     priv: "private_key.pem",
-    pub: "public_key.pem"
+    pub: "public_key.pem",
+    pub_ec: "ec256-pub.pem"
   }
   @jws_rs %{"alg" => "RS256", "kid" => @kid}
 
@@ -98,6 +99,16 @@ defmodule JwtServer do
 
   get "/keys.json" do
     jwks_rs = jwk_rs(:pub)
+    {_, key} = JOSE.JWK.to_map(jwks_rs)
+    jwks = %{<<"keys">> => [key]}
+
+    conn
+    |> put_resp_header("content-type", "application/json")
+    |> send_resp(200, Jason.encode!(jwks))
+  end
+
+  get "/keys-ec.json" do
+    jwks_rs = jwk_rs(:pub_ec)
     {_, key} = JOSE.JWK.to_map(jwks_rs)
     jwks = %{<<"keys">> => [key]}
 
